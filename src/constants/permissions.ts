@@ -1,0 +1,23 @@
+import { Role } from '@prisma/client';
+
+
+export const PERMISSIONS = {
+  READ_RECORDS: [Role.VIEWER, Role.ANALYST, Role.ADMIN],
+
+  CREATE_RECORD: [Role.ADMIN],
+
+  UPDATE_RECORD: [Role.ADMIN],
+
+  DELETE_RECORD: [Role.ADMIN],
+
+  VIEW_DASHBOARD_SUMMARY: [Role.VIEWER, Role.ANALYST, Role.ADMIN],
+
+  VIEW_ANALYTICS: [Role.ANALYST, Role.ADMIN],
+
+  VIEW_RECENT_ACTIVITY: [Role.VIEWER, Role.ANALYST, Role.ADMIN],
+
+  MANAGE_USERS: [Role.ADMIN],
+
+
+  VIEW_AUDIT_LOG: [Role.ADMIN]
+};
