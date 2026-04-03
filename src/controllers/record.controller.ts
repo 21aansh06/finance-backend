@@ -47,7 +47,7 @@ export const getOne = async (req: Request, res: Response, next: NextFunction) =>
 
 export const update = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const record = await recordService.updateRecord(req.params.id, req.body);
+    const record = await recordService.updateRecord(req.params.id, req.body, req.user!.userId);
     return successResponse(res, record, 'Record updated successfully', 200);
   } catch (error) {
     next(error);

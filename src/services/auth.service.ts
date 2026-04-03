@@ -5,6 +5,7 @@ import { AppError } from '../utils/errors';
 import { RegisterInput, LoginInput } from '../validators/auth.validator';
 import { config } from '../config/env';
 import { Role } from '@prisma/client';
+import { logAction } from './audit.service';
 
 export const registerUser = async ({ name, email, password }: RegisterInput) => {
   const existingUser = await prisma.user.findUnique({ where: { email } });
@@ -50,6 +51,7 @@ export const loginUser = async ({ email, password }: LoginInput) => {
 
   const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
   if (!isPasswordValid) {
+    await logAction({ userId: user.id, action: 'USER_LOGIN_FAILED', entity: 'User', entityId: 'unknown', metadata: { email, reason: 'Invalid password' }});
     throw new AppError('Invalid credentials', 401);
   }
 
@@ -64,5 +66,8 @@ export const loginUser = async ({ email, password }: LoginInput) => {
   });
 
   const { passwordHash: _, ...safeUser } = user;
+  
+  await logAction({ userId: user.id, action: 'USER_LOGIN', entity: 'User', entityId: user.id, metadata: { email } });
+
   return { user: safeUser, token };
 };

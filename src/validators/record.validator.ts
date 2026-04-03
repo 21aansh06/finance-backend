@@ -19,7 +19,18 @@ export const querySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(10),
   sortBy: z.enum(['date', 'amount', 'createdAt']).default('date'),
   sortOrder: z.enum(['asc', 'desc']).default('desc')
-});
+}).refine(
+  (data) => {
+    if (data.dateFrom && data.dateTo) {
+      return new Date(data.dateTo) >= new Date(data.dateFrom);
+    }
+    return true;
+  },
+  {
+    message: 'dateTo must be after or equal to dateFrom',
+    path: ['dateTo'],
+  }
+);
 
 export type CreateRecordInput = z.infer<typeof createRecordSchema>;
 export type UpdateRecordInput = z.infer<typeof updateRecordSchema>;

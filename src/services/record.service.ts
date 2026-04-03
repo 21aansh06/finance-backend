@@ -2,9 +2,12 @@ import prisma from '../config/database';
 import { AppError } from '../utils/errors';
 import { Prisma, RecordType } from '@prisma/client';
 import { CreateRecordInput, UpdateRecordInput, QueryInput } from '../validators/record.validator';
+import { logAction } from './audit.service';
 
 export const createRecord = async (data: CreateRecordInput & { createdBy: string }) => {
-  return await prisma.financialRecord.create({
+  if (data.amount > 999999999.99) throw new AppError('Amount exceeds maximum allowed value', 400);
+
+  const record = await prisma.financialRecord.create({
     data: {
       amount: new Prisma.Decimal(data.amount),
       type: data.type as RecordType,
@@ -14,10 +17,22 @@ export const createRecord = async (data: CreateRecordInput & { createdBy: string
       createdBy: data.createdBy,
     },
   });
+
+  await logAction({ 
+    userId: data.createdBy, 
+    action: 'RECORD_CREATED', 
+    entity: 'FinancialRecord', 
+    entityId: record.id, 
+    metadata: { amount: data.amount, type: data.type, category: data.category } 
+  });
+
+  return record;
 };
 
 export const getRecords = async (filters: QueryInput) => {
   const { type, category, dateFrom, dateTo, page, limit, sortBy, sortOrder } = filters;
+
+  if (page * limit > 10000) throw new AppError('Pagination offset too large', 400);
 
   const where: Prisma.FinancialRecordWhereInput = {
     isDeleted: false,
@@ -75,7 +90,7 @@ export const getRecordById = async (id: string) => {
   return record;
 };
 
-export const updateRecord = async (id: string, data: UpdateRecordInput) => {
+export const updateRecord = async (id: string, data: UpdateRecordInput, userId: string) => {
   await getRecordById(id);
 
   const updateData: Prisma.FinancialRecordUpdateInput = {};
@@ -86,10 +101,20 @@ export const updateRecord = async (id: string, data: UpdateRecordInput) => {
   if (data.date !== undefined) updateData.date = new Date(data.date);
   if (data.notes !== undefined) updateData.notes = data.notes;
 
-  return await prisma.financialRecord.update({
+  const updated = await prisma.financialRecord.update({
     where: { id },
     data: updateData,
   });
+
+  await logAction({
+    userId,
+    action: 'RECORD_UPDATED',
+    entity: 'FinancialRecord',
+    entityId: id,
+    metadata: { updatedFields: Object.keys(data) }
+  });
+
+  return updated;
 };
 
 export const softDeleteRecord = async (id: string, deletedByUserId: string) => {
@@ -100,6 +125,13 @@ export const softDeleteRecord = async (id: string, deletedByUserId: string) => {
     data: {
       isDeleted: true,
     },
+  });
+
+  await logAction({
+    userId: deletedByUserId,
+    action: 'RECORD_DELETED',
+    entity: 'FinancialRecord',
+    entityId: id,
   });
 
   return { message: 'Record deleted successfully' };
