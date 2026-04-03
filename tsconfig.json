@@ -16,6 +16,6 @@
     "require": ["tsconfig-paths/register"],
     "files": true
   },
-  "include": ["src/**/*", "prisma/seed.ts"],
+  "include": ["src/**/*"],
   "exclude": ["node_modules"]
 }
