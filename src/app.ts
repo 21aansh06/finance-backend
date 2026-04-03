@@ -10,21 +10,18 @@ import { swaggerSpec } from './config/swagger';
 
 const app: Application = express();
 
-// Security Middlewares
+// Middlewares
 app.use(helmet());
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 
-// Rate Limiter
+
 app.use(globalLimiter);
 
-// Swagger Docs
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, { explorer: true }));
 
-// Routes
 app.use('/', routes);
 
-// Unknown route handler
 app.use('*', (req, res) => {
   errorResponse(res, `Route ${req.method} ${req.originalUrl} not found`, 404);
 });
