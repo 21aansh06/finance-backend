@@ -22,6 +22,10 @@ app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, { explorer: t
 
 app.use('/', routes);
 
+app.get('/', (req, res) => {
+  return res.json({ message: 'Working' });
+});
+
 app.use('*', (req, res) => {
   errorResponse(res, `Route ${req.method} ${req.originalUrl} not found`, 404);
 });
