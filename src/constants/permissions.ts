@@ -2,7 +2,7 @@ import { Role } from '@prisma/client';
 
 
 export const PERMISSIONS = {
-  READ_RECORDS: [Role.VIEWER, Role.ANALYST, Role.ADMIN],
+  READ_RECORDS: [Role.ANALYST, Role.ADMIN],
 
   CREATE_RECORD: [Role.ADMIN],
 
